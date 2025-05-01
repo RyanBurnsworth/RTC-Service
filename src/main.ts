@@ -4,18 +4,16 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const fs = require('fs');
 
-  const httpOptions = {
-    key: fs.readFileSync(require('path').resolve(__dirname, '../secrets/privkey.pem')),
-    cert: fs.readFileSync(require('path').resolve(__dirname, '../secrets/fullchain.pem')),
-  };
+  // const httpOptions = {
+  //   key: fs.readFileSync(require('path').resolve(__dirname, '../secrets/privkey.pem')),
+  //   cert: fs.readFileSync(require('path').resolve(__dirname, '../secrets/fullchain.pem')),
+  // };
 
-  const app = await NestFactory.create(AppModule, {
-    httpsOptions: httpOptions,
-  });
+  const app = await NestFactory.create(AppModule);
 
   const options = {
     allowedHeaders: ['content-type'],
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:4200',
     credentials: true,
   };
 

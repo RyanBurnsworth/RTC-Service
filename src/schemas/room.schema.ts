@@ -4,23 +4,11 @@ export type RoomDocument = Room & Document;
 
 @Schema()
 export class Room {
-    @Prop({required: true})
+    @Prop({required: true, unique: true, index: true})
     roomId: string;
 
-    @Prop({required: true})
-    userOneId: string;
-
-    @Prop({required: true})
-    createdTime: Date;
-
-    @Prop()
-    userTwoId?: string;
-
-    @Prop()
-    joinTime?: Date;
-
-    @Prop()
-    endTime?: Date;
+    @Prop({request: true, type: [String], default: []})
+    participants: string[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

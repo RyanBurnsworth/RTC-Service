@@ -17,25 +17,44 @@ export class RoomService {
    * @returns an available room
    */
   async findAvailableRoom(participantId: string): Promise<Room> {
-    console.log('Fetching an available room');
+    console.log('Fetching an available room for participantId: ', participantId);
   
     // Find a room with only 1 participant that is not the current participant
-    const room = await this.roomModel.findOne({
+    const availableRoom = await this.roomModel.findOne({
       participants: { $size: 1, $ne: participantId },
     });
-  
-    if (!room) {
-      console.log('findAvailableRoom: No room available. Creating new room');
+
+    // find a room with 1 participant that is the same as the current participant
+    const existingParticipantRoom = await this.roomModel.findOne({
+        $expr: {
+          $and: [
+            { $eq: [{ $size: "$participants" }, 1] },
+            { $eq: [{ $arrayElemAt: ["$participants", 0] }, participantId] }
+          ]
+        }
+    });
+
+    // if nothing available create a new room
+    if (!availableRoom && !existingParticipantRoom) {
+      console.log('No room available. Creating new room');
+      
+      // remove all entries with this participants userId before creating new entry
+      await this.roomModel.deleteMany({ participants: participantId }).exec();
+      
       return this.createNewRoom(participantId);
+    } else if (!availableRoom && existingParticipantRoom) {
+        console.log("Returning existing room");
+        return existingParticipantRoom;
     }
   
-    console.log('findAvailableRoom: Joining room: ' + room.roomId);
-  
-    if (!room.participants.includes(participantId)) {
-      room.participants.push(participantId);
+    // join the existing room
+    if (!availableRoom.participants.includes(participantId)) {
+        console.log(`Storing participantId ${participantId} in room participants`);
+        availableRoom.participants.push(participantId);
     }
-  
-    return await room.save();
+
+    console.log(`Joining room: ${availableRoom.roomId} with users: ${availableRoom.participants}`);
+    return await availableRoom.save();
   }
 
   /**
@@ -52,11 +71,11 @@ export class RoomService {
     });
 
     console.log("createNewRoom: ", newRoom);
-    
+
     return await newRoom.save();
   }
   
-  async deleteRoom(id: string) {
-    await this.roomModel.findByIdAndDelete(id).exec();
+  async deleteRoom(roomId: string) {
+    await this.roomModel.findByIdAndDelete({ roomId }).exec();
   }
 }

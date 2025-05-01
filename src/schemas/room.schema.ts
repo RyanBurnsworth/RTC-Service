@@ -12,3 +12,6 @@ export class Room {
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
+
+// Automatically remove documents 24 hours after creation
+RoomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 0 });
